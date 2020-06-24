@@ -1,25 +1,57 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import PokemonList from "./components/pokemonList";
+import Pagination from "./components/pagination";
 
 function App() {
+  const initialUrl = "https://pokeapi.co/api/v2/pokemon";
+  const [pokemons, setPokemon] = useState([]);
+  const [currentPage, setCurrentPage] = useState(initialUrl);
+  const [nextPage, setNextPage] = useState();
+  const [previousPage, setPreviousPage] = useState();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    let cancel;
+    async function fetchData() {
+      try {
+        const { data } = await axios.get(currentPage);
+        console.log("data", data.results);
+        console.log("next", data.next);
+        console.log("prev", data.previous);
+
+        setNextPage(data.next);
+        setPreviousPage(data.previous);
+        setPokemon(data.results.map((item) => item));
+        setLoading(false);
+      } catch (error) {}
+    }
+    fetchData();
+  }, [currentPage]);
+
+  function goToPrevPage() {
+    console.log("going to previous page");
+    setCurrentPage(previousPage);
+  }
+
+  function goToNextPage() {
+    console.log("going to next page");
+    setCurrentPage(nextPage);
+  }
+
+  if (loading) {
+    return "Loading...";
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <React.Fragment>
+      <PokemonList items={pokemons}></PokemonList>
+      <Pagination
+        next={nextPage ? goToNextPage : null}
+        prev={previousPage ? goToPrevPage : null}
+      ></Pagination>
+    </React.Fragment>
   );
 }
 
